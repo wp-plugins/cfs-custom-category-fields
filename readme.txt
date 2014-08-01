@@ -12,7 +12,7 @@ A Custom Field Suite Addon that provides custom meta data for categories and cus
 
 == Description ==
 
-CCF Categories Fields is a Custom Field Suite addon that provides meta data or custom fields for categories and custom taxonomies. Key features are as follows:
+CFS Categories Fields is a Custom Field Suite addon that provides meta data or custom fields for categories and custom taxonomies. Key features are as follows:
 
 *   Apply Custom Fields to Categories and Custom Taxonomies
 *   Requires the Custom Field Suite Plugin
