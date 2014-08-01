@@ -8,7 +8,7 @@ Stable tag: 1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Custom Category Fields. A Custom Field Suite Addon that provides custom meta data for categories and custom taxonomies.
+A Custom Field Suite Addon that provides custom meta data for categories and custom taxonomies.
 
 == Description ==
 
