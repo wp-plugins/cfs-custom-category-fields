@@ -1,14 +1,15 @@
 <?php
 /**
  * @package CFS Custom Category Fields
- * @version 1.0
+ * @version 1.0.1
  */
 /*
 Plugin Name: CFS Custom Category Fields
+Plugin URI: http://wordpress.org/plugins/cfs-custom-category-fields/
 Description: CFS Addon for category meta data. Apply custom fields to categories and custom taxonomies. Requires Custom Field Suite.
 Author: GatorDev
 Author URI: http://gatordev.com/
-Version: 1.0
+Version: 1.0.1
 */
 class CfsTaxonomy
 {
@@ -21,7 +22,7 @@ class CfsTaxonomy
     const ID = 'cfs-taxonomy';
     const POST_TYPE = 'cfs_virtual';
     const TAXONOMY = 'cfs_bridget';
-    const VERSION = '1.0';
+    const VERSION = '1.0.1';
 
 /**
  * showForm
@@ -212,9 +213,16 @@ class CfsTaxonomy
             self::$initGet = true;
         }
         if(false === $name){
-            return CFS()->api->get_fields($post->ID);
+            return array_map('CfsTaxonomy::flattenData', CFS()->api->get_fields($post->ID));
         }
         return CFS()->api->get_field($name, $post->ID);
+    }
+
+    public static function flattenData($data){
+        if(is_array($data)){
+            return current($data);
+        }
+        return $data;
     }
 
     public static function showNotice(){
