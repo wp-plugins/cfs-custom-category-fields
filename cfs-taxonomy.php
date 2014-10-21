@@ -1,7 +1,7 @@
 <?php
 /**
  * @package CFS Custom Category Fields
- * @version 1.0.1
+ * @version 1.0.2
  */
 /*
 Plugin Name: CFS Custom Category Fields
@@ -9,7 +9,7 @@ Plugin URI: http://wordpress.org/plugins/cfs-custom-category-fields/
 Description: CFS Addon for category meta data. Apply custom fields to categories and custom taxonomies. Requires Custom Field Suite.
 Author: GatorDev
 Author URI: http://gatordev.com/
-Version: 1.0.1
+Version: 1.0.2
 */
 class CfsTaxonomy
 {
@@ -22,7 +22,7 @@ class CfsTaxonomy
     const ID = 'cfs-taxonomy';
     const POST_TYPE = 'cfs_virtual';
     const TAXONOMY = 'cfs_bridget';
-    const VERSION = '1.0.1';
+    const VERSION = '1.0.2';
 
 /**
  * showForm
@@ -201,11 +201,7 @@ class CfsTaxonomy
     }
 
     public static function get($name = false, $term = null){
-        if(!isset($term)){
-            $term = isset(self::$termCache) ? self::$termCache : (self::$termCache = get_queried_object());
-        }
-        if(!self::$isCfs || !isset($term->term_id) || false === (self::$fieldGroup = self::matchGroups($term->taxonomy))
-          || false === ($post = self::getVirtualPosts()->getPost($term->term_id))){
+        if(false === ($post = self::prepareTerm($term))){ 
             return false === $name ? array() : '';
         }
         if(!self::$initGet){
@@ -216,6 +212,15 @@ class CfsTaxonomy
             return array_map('CfsTaxonomy::flattenData', CFS()->api->get_fields($post->ID));
         }
         return CFS()->api->get_field($name, $post->ID);
+    }
+
+    public static function getForm($term = null){
+        if(false === ($post = self::prepareTerm($term))){ 
+            return '';
+        }
+        ob_start();
+        CFS()->form->render(array('post_id' => '$post->ID'));
+        return ob_get_clean();
     }
 
     public static function flattenData($data){
@@ -243,6 +248,21 @@ class CfsTaxonomy
         }
         return self::$taxonomies;
     }
+
+    protected static function prepareTerm($term){
+        if(!isset($term)){
+            $term = isset(self::$termCache) ? self::$termCache : (self::$termCache = get_queried_object());
+        }
+        if(!self::$isCfs || !isset($term->term_id) || false === (self::$fieldGroup = self::matchGroups($term->taxonomy))
+          || false === ($post = self::getVirtualPosts()->getPost($term->term_id))){
+            return false;
+        }
+        if(!self::$initGet){
+            add_filter('cfs_matching_groups', 'CfsTaxonomy::matchingGroups');
+            self::$initGet = true;
+        }
+        return $post;
+    }
 }
 /**
  * Hooks
@@ -261,5 +281,15 @@ add_action('save_post_cfs', 'CfsTaxonomy::saveCfsPost', 9, 2);
 if(!function_exists('get_category_meta')){
     function get_category_meta($name = false, $term = null){
         return CfsTaxonomy::get($name, $term);
+    }
+}
+/**
+ * get_category_form
+ *
+ * wrapper function to get category fields
+ */
+if(!function_exists('get_category_form')){
+    function get_category_form($term = null){
+        return CfsTaxonomy::getForm($term);
     }
 }
