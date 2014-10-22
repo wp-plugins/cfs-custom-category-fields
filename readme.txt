@@ -3,8 +3,8 @@ Contributors: GatorDog
 Donate link: http://gatordev.com/
 Tags: category meta data, category custom fields, custom field suite addon
 Requires at least: 3.6
-Tested up to: 3.9
-Stable tag: 1.0.1
+Tested up to: 4.0
+Stable tag: 1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,8 +35,18 @@ CFS Category Fields is a Custom Field Suite addon that provides meta data or cus
 
 Use the function get_category_meta('field_name'), or alternatively, call CfsTaxonomy::get('field_name') directly, in your php.
 
+= How do I retrieve custom category fields anywhere? =
+
+Use the function get_category_meta() and pass it the term object as the second parameter, eg: get_category_meta(false, get_term_by('slug', 'good-stuff', 'category)). This will return all field data from the category Good Stuff. 
+
+= How do I retrieve the cfs front-end form? =
+
+Use the function get_category_form(). If used on a category or archive page it takes no parameters. It can be used anywhere by passing the term object as the first parameter.
+
 == Changelog ==
 
+= 1.1 =
+* Introduces the function get_category_form() which retrieves the cfs front-end form for your field group.
 = 1.0.1 =
 * Flatten field data returned by get_category_meta() when all fields are returned.
 = 1.0 =
