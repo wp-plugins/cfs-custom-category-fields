@@ -37,7 +37,7 @@ Use the function get_category_meta('field_name'), or alternatively, call CfsTaxo
 
 = How do I retrieve custom category fields anywhere? =
 
-Use the function get_category_meta() and pass it the term object as the second parameter, eg: get_category_meta(false, get_term_by('slug', 'good-stuff', 'category)). This will return all field data from the category Good Stuff. 
+Use the function get_category_meta() and pass it the term object as the second parameter, eg: get_category_meta(false, get_term_by('slug', 'good-stuff', 'category')). This will return all field data from the category Good Stuff. 
 
 = How do I retrieve the cfs front-end form? =
 
