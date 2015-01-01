@@ -1,7 +1,7 @@
 <?php
 /**
  * @package CFS Custom Category Fields
- * @version 1.1
+ * @version 1.2
  */
 /*
 Plugin Name: CFS Custom Category Fields
@@ -9,7 +9,7 @@ Plugin URI: http://wordpress.org/plugins/cfs-custom-category-fields/
 Description: CFS Addon for category meta data. Apply custom fields to categories and custom taxonomies. Requires Custom Field Suite.
 Author: GatorDev
 Author URI: http://gatordev.com/
-Version: 1.1
+Version: 1.2
 */
 class CfsTaxonomy
 {
@@ -22,23 +22,26 @@ class CfsTaxonomy
     const ID = 'cfs-taxonomy';
     const POST_TYPE = 'cfs_virtual';
     const TAXONOMY = 'cfs_bridget';
-    const VERSION = '1.1';
+    const VERSION = '1.2';
 
 /**
  * showForm
- * 
+ *
  * Shows the CFS form for categories and custom taxonomies.
- * 
+ *
  * @note: Hooked in context from $taxonomy_edit_form_fields
  */
-    public static function showForm($term, $taxonomy){
-        if(false === (self::$fieldGroup = self::matchGroups($taxonomy))){//no matching groups
+    public static function showForm($term, $taxonomy)
+    {
+        if (false === (self::$fieldGroup = self::matchGroups($taxonomy))) {
+            //no matching groups
             return;
         }
         //virtual post for our fields
         global $post;
-        if(false === ($post = self::getVirtualPosts()->getPost($term->term_id))
-          && false === ($post = self::getVirtualPosts()->setPost($term->term_id))){//houston we have a problem
+        if (false === ($post = self::getVirtualPosts()->getPost($term->term_id))
+          && false === ($post = self::getVirtualPosts()->setPost($term->term_id))) {
+            //houston we have a problem
             return;
         }
         add_filter('postbox_classes_' . self::ID . '_tagsdiv-post_tag', 'CfsTaxonomy::postBoxClasses');
@@ -48,8 +51,9 @@ class CfsTaxonomy
         echo '</div></td></tr>';
     }
 
-    public static function showMetaBox($context){
-        if('rabbit' !== $context || !self::$isCfs){
+    public static function showMetaBox($context)
+    {
+        if ('rabbit' !== $context || !self::$isCfs) {
             echo '<p>Where is that Wiley Wabbit!</p>';
             return;
         }
@@ -62,27 +66,33 @@ class CfsTaxonomy
         CFS()->meta_box($post, array('args' => $args));
     }
 
-    public static function matchingGroups($matches){
-        if(isset(self::$fieldGroup)){//this is only hooked in context so it should always be set
+    public static function matchingGroups($matches)
+    {
+        if (isset(self::$fieldGroup)) {
+            //this is only hooked in context so it should always be set
             return self::$fieldGroup;
         }
         return $matches;
     }
 
-    public static function postBoxClasses($classes){//cfs_postbox_classes
+    public static function postBoxClasses($classes)
+    {
+        //cfs_postbox_classes
         $classes[] = 'cfs_input';
         return $classes;
     }
 
-    public static function cfsMetaBox(){
+    public static function cfsMetaBox()
+    {
         add_meta_box(self::ID, __('Apply to Category / Taxonomy', self::ID), 'CfsTaxonomy::showCfsMetaBox', 'cfs', 'side', 'core');
     }
 
-    public static function showCfsMetaBox(){
+    public static function showCfsMetaBox()
+    {
         global $post;
         $choices = array();
-        foreach(self::getTaxonomies() as $key => $taxonomy){
-           $choices[$key] = $taxonomy->labels->singular_name;
+        foreach (self::getTaxonomies() as $key => $taxonomy) {
+            $choices[$key] = $taxonomy->labels->singular_name;
         }
         //var_dump($post->ID);var_dump(wp_get_object_terms($post->ID, 'cfs_taxonomy', array('fields' => 'slugs')));
         CFS()->create_field(array(
@@ -94,43 +104,47 @@ class CfsTaxonomy
         ));
     }
 
-    public static function saveCfsPost($post_id, $post){
-        if((defined('DOING_AUTOSAVE') && DOING_AUTOSAVE)
+    public static function saveCfsPost($post_id, $post)
+    {
+        if ((defined('DOING_AUTOSAVE') && DOING_AUTOSAVE)
           || 'cfs' !== $post->post_type//make sure it's not a revision
           || !isset($_POST['cfs']['save'])
-          || !current_user_can('edit_posts')){
-          //|| !wp_verify_nonce( $_POST['cfs']['save'], 'cfs_save_fields' )){
+          || !current_user_can('edit_posts')) {
+            //|| !wp_verify_nonce( $_POST['cfs']['save'], 'cfs_save_fields' )){
             return;
         }
-        if(!isset($_POST['cfs'][self::ID])){
+        if (!isset($_POST['cfs'][self::ID])) {
             wp_delete_object_term_relationships($post->ID, 'cfs_taxonomy');
             return;
         }
         $taxonomies = self::getTaxonomies();
-        foreach($_POST['cfs'][self::ID] as $key => $val){
-            if(!isset($taxonomies[$val])){//not valid
+        foreach ($_POST['cfs'][self::ID] as $key => $val) {
+            if (!isset($taxonomies[$val])) {
+                //not valid
                 unset($_POST['cfs'][self::ID][$key]);
             }
         }
-        if(empty($_POST['cfs'][self::ID])){
+        if (empty($_POST['cfs'][self::ID])) {
             wp_delete_object_term_relationships($post->ID, 'cfs_taxonomy');
             return;
         }
         //var_dump($_POST['cfs'][self::ID]);var_dump($post->ID);
         $result = wp_set_object_terms($post->ID, $_POST['cfs'][self::ID], 'cfs_taxonomy');
         return;
-        if(is_wp_error($result)){
+        if (is_wp_error($result)) {
             echo $result->get_error_message();
         }
     }
 
-    public static function onInit(){
+    public static function onInit()
+    {
         self::getVirtualPosts()->registerPostType();
     }
 
-    public static function cfsInit(){
+    public static function cfsInit()
+    {
         self::$isCfs = true;
-        if(taxonomy_exists('cfs_taxonomy')){
+        if (taxonomy_exists('cfs_taxonomy')) {
             return;
         }
         register_taxonomy('cfs_taxonomy', 'cfs',
@@ -144,16 +158,18 @@ class CfsTaxonomy
         register_taxonomy_for_object_type('cfs_taxonomy', 'cfs');
     }
 
-    public static function getVirtualPosts(){
-        if(!isset(self::$virtualPosts)){
+    public static function getVirtualPosts()
+    {
+        if (!isset(self::$virtualPosts)) {
             require_once(dirname(__FILE__) . '/lib/VirtualPosts.php');
             self::$virtualPosts = new VirtualPosts(self::POST_TYPE, self::TAXONOMY);
         }
         return self::$virtualPosts;
     }
 
-    public static function matchGroups($taxonomy){
-       $posts = get_posts(array('post_type' => 'cfs', 'post_status' => 'publish', 'posts_per_page' => 1, //'fields' => 'ids',
+    public static function matchGroups($taxonomy)
+    {
+        $posts = get_posts(array('post_type' => 'cfs', 'post_status' => 'publish', 'posts_per_page' => 1, //'fields' => 'ids',
             'tax_query' => array(
                 array(
                     'taxonomy' => 'cfs_taxonomy',
@@ -165,8 +181,10 @@ class CfsTaxonomy
         return empty($posts) ? false : array($posts[0]->ID => $posts[0]->post_title);//need the title for the menu
     }
 
-    public static function adminInit(){
-        if(!is_plugin_active('custom-field-suite/cfs.php')){//based on wp_option active_plugins 
+    public static function adminInit()
+    {
+        if (!is_plugin_active('custom-field-suite/cfs.php')) {
+            //based on wp_option active_plugins
             add_action('admin_notices', 'CfsTaxonomy::showNotice');
             add_action('network_admin_notices', 'CfsTaxonomy::showNotice');
         }
@@ -182,40 +200,47 @@ class CfsTaxonomy
         }*/
     }
 
-    public static function loadJs($context){
-        if('edit-tags.php' === $context && isset($_GET['action']) && 'edit' === $_GET['action']){
+    public static function loadJs($context)
+    {
+        if ('edit-tags.php' === $context && isset($_GET['action']) && 'edit' === $_GET['action']) {
             wp_enqueue_script('post');
-            wp_enqueue_style(self::ID, plugins_url('css/admin.css' , __FILE__));
+            wp_enqueue_style(self::ID, plugins_url('css/admin.css', __FILE__));
             //hook the edit forms for category and other custom hierarchical taxonomies
-            foreach(self::getTaxonomies() as $taxonomy){
+            foreach (self::getTaxonomies() as $taxonomy) {
                 add_action($taxonomy->name . '_edit_form_fields', 'CfsTaxonomy::showForm', 11, 2);
             }
             return;
         }
-        if('post.php' === $context){//It's a post Jim
+        if ('post.php' === $context) {
+            //It's a post Jim
             global $post;
-            if('cfs' === $post->post_type){//It's a cfs post Mr. Spock
-                wp_enqueue_style(self::ID, plugins_url('css/admin.css' , __FILE__));
+            if ('cfs' === $post->post_type) {
+                //It's a cfs post Mr. Spock
+                wp_enqueue_style(self::ID, plugins_url('css/admin.css', __FILE__));
             }
         }
     }
 
-    public static function get($name = false, $term = null){
-        if(false === ($post = self::prepareTerm($term))){ 
+    public static function get($name = false, $term = null)
+    {
+        if (false === ($post = self::prepareTerm($term))) {
             return false === $name ? array() : '';
         }
-        if(!self::$initGet){
+        if (!self::$initGet) {
             add_filter('cfs_matching_groups', 'CfsTaxonomy::matchingGroups');
             self::$initGet = true;
         }
-        if(false === $name){
-            return array_map('CfsTaxonomy::flattenData', CFS()->api->get_fields($post->ID));
+        if (false === $name) {
+            return CFS()->api->get_fields($post->ID);
+            //this is non-compatible with relationship field and not really needed in recent cfs versions
+            //return array_map('CfsTaxonomy::flattenData', CFS()->api->get_fields($post->ID));
         }
         return CFS()->api->get_field($name, $post->ID);
     }
 
-    public static function getForm($term = null){
-        if(false === ($post = self::prepareTerm($term))){ 
+    public static function getForm($term = null)
+    {
+        if (false === ($post = self::prepareTerm($term))) {
             return '';
         }
         ob_start();
@@ -223,14 +248,16 @@ class CfsTaxonomy
         return ob_get_clean();
     }
 
-    public static function flattenData($data){
-        if(is_array($data)){
+    public static function flattenData($data)
+    {
+        if (is_array($data)) {
             return current($data);
         }
         return $data;
     }
 
-    public static function showNotice(){
+    public static function showNotice()
+    {
         $path = 'plugin-install.php?tab=search&s=Custom+Field+Suite&plugin-search-input=Search+Plugins';
         printf('<div class="updated">
     <p>Warning: CFS Custom Category Fields will not work without Custom Field Suite.
@@ -238,26 +265,34 @@ class CfsTaxonomy
     </p></div>', is_multisite() ? network_admin_url($path) : admin_url($path));
     }
 
-    public static function filterTaxonomies($taxonomy){
+    public static function removeFilters()
+    {
+        remove_filter('cfs_matching_groups', 'CfsTaxonomy::matchingGroups');
+    }
+
+    public static function filterTaxonomies($taxonomy)
+    {
         return $taxonomy->hierarchical;
     }
 
-    protected static function getTaxonomies(){
-        if(!isset(self::$taxonomies)){
+    protected static function getTaxonomies()
+    {
+        if (!isset(self::$taxonomies)) {
             self::$taxonomies = array_filter(get_taxonomies(array('public' => true), 'objects'), 'CfsTaxonomy::filterTaxonomies');
         }
         return self::$taxonomies;
     }
 
-    protected static function prepareTerm($term){
-        if(!isset($term)){
+    protected static function prepareTerm($term)
+    {
+        if (!isset($term)) {
             $term = isset(self::$termCache) ? self::$termCache : (self::$termCache = get_queried_object());
         }
-        if(!self::$isCfs || !isset($term->term_id) || false === (self::$fieldGroup = self::matchGroups($term->taxonomy))
-          || false === ($post = self::getVirtualPosts()->getPost($term->term_id))){
+        if (!self::$isCfs || !isset($term->term_id) || false === (self::$fieldGroup = self::matchGroups($term->taxonomy))
+          || false === ($post = self::getVirtualPosts()->getPost($term->term_id))) {
             return false;
         }
-        if(!self::$initGet){
+        if (!self::$initGet) {
             add_filter('cfs_matching_groups', 'CfsTaxonomy::matchingGroups');
             self::$initGet = true;
         }
@@ -278,9 +313,12 @@ add_action('save_post_cfs', 'CfsTaxonomy::saveCfsPost', 9, 2);
  *
  * wrapper function to get category fields
  */
-if(!function_exists('get_category_meta')){
-    function get_category_meta($name = false, $term = null){
-        return CfsTaxonomy::get($name, $term);
+if (!function_exists('get_category_meta')) {
+    function get_category_meta($name = false, $term = null)
+    {
+        $data = CfsTaxonomy::get($name, $term);
+        CfsTaxonomy::removeFilters();
+        return $data;
     }
 }
 /**
@@ -288,8 +326,11 @@ if(!function_exists('get_category_meta')){
  *
  * wrapper function to get category fields
  */
-if(!function_exists('get_category_form')){
-    function get_category_form($term = null){
-        return CfsTaxonomy::getForm($term);
+if (!function_exists('get_category_form')) {
+    function get_category_form($term = null)
+    {
+        $form = CfsTaxonomy::getForm($term);
+        CfsTaxonomy::removeFilters();
+        return $form;
     }
 }
