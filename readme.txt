@@ -4,7 +4,7 @@ Donate link: http://gatordev.com/
 Tags: category meta data, category custom fields, custom field suite addon
 Requires at least: 3.6
 Tested up to: 4.1
-Stable tag: 1.2
+Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -45,8 +45,10 @@ Use the function get_category_form(). If used on a category or archive page it t
 
 == Changelog ==
 
+= 1.2.1 =
+* Fixes bug with calling get_category_meta() in a loop, ie more than once.
 = 1.2 =
-* Fixes incompatiblity with relationship fields and the issue with making further cfs calls after calling category_get_meta.
+* Fixes incompatiblity with relationship fields and the issue with making further cfs calls after calling get_category_meta().
 = 1.1 =
 * Introduces the function get_category_form() which retrieves the cfs front-end form for your field group.
 = 1.0.1 =
